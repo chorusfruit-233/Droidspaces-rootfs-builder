@@ -1,4 +1,4 @@
-name: Build and Release Droidspaces RootFS
+name: Build and Release Kali Linux RootFS
 
 on:
   push:
@@ -11,9 +11,9 @@ on:
         type: boolean
         default: false
       enable_systemd257:
-        description: 'Kali Linux: enable systemd 257 old-kernel compat (rebuild systemd from Debian source in-container)'
+        description: 'Enable systemd 257 old-kernel compat (rebuild systemd from Debian source in-container; adds ~10-30 min)'
         type: boolean
-        default: false
+        default: true
   schedule:
     - cron: '0 0 * * 0'
 
@@ -32,8 +32,8 @@ jobs:
       - name: Find Build Templates
         id: find-templates
         run: |
-          # Find all *.Dockerfile files, extract names, and format as JSON array
-          TEMPLATES=$(ls *.Dockerfile | sed 's/\.Dockerfile//' | jq -R -s -c 'split("\n")[:-1]')
+          # Kali-only: find Kali-Linux-*.Dockerfile templates and format as JSON array
+          TEMPLATES=$(ls Kali-Linux-*.Dockerfile | sed 's/\.Dockerfile//' | jq -R -s -c 'split("\n")[:-1]')
           echo "templates=$TEMPLATES" >> $GITHUB_OUTPUT
           echo "Detected templates: $TEMPLATES"
 
@@ -61,9 +61,9 @@ jobs:
       - name: Build RootFS (${{ matrix.template }})
         run: |
           chmod +x build_rootfs-native.sh
-          SYS257="false"
-          if [[ "${{ matrix.template }}" == Kali-Linux-* ]] && [[ "${{ github.event.inputs.enable_systemd257 }}" == "true" ]]; then
-            SYS257="true"
+          SYS257="true"
+          if [[ "${{ github.event.inputs.enable_systemd257 }}" == "false" ]]; then
+            SYS257="false"
           fi
           echo "enable_systemd257=$SYS257"
           # Native build without QEMU overhead
@@ -76,45 +76,9 @@ jobs:
           path: "*.tar.xz"
           retention-days: 1
 
-  build-nixos:
-    if: ${{ github.event.inputs.update_json_only != 'true' }}
-    needs: setup
-    runs-on: ubuntu-24.04-arm
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: NixOS-Minimal-Systemd-latest-Kernel-5.10-and-up
-            attr: nixosDroidspacesTarballs.aarch64-linux.minimal
-          - name: NixOS-Minimal-Systemd-v257.9
-            attr: nixosDroidspacesTarballs.aarch64-linux.minimal-with-systemd-v257
-          - name: NixOS-Minimal-Finix-Experimental
-            attr: finixDroidspacesTarballs.aarch64-linux.experimental
-    steps:
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v16
-
-      - name: Build ${{ matrix.name }} RootFS
-        run: |
-          nix build github:ravindu644/Droidspaces-OSS#${{ matrix.attr }}
-
-      - name: Package artifact
-        run: |
-          DATE=$(date +%Y%m%d)
-          TARBALL=$(find result/tarball -name "*.tar.xz" | head -1)
-          FINAL="${{ matrix.name }}-Droidspaces-rootfs-aarch64-${DATE}-${{ needs.setup.outputs.build_id }}.tar.xz"
-          cp "$TARBALL" "$FINAL"
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}-rootfs
-          path: "*.tar.xz"
-          retention-days: 1
-
   release:
     if: ${{ github.event.inputs.update_json_only != 'true' }}
-    needs: [setup, build, build-nixos]
+    needs: [setup, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -132,13 +96,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.setup.outputs.build_id }}
-          name: "Droidspaces RootFS ${{ needs.setup.outputs.build_id }}"
+          name: "Kali Linux RootFS ${{ needs.setup.outputs.build_id }}"
           files: "*.tar.xz"
           body: |
-            Automated Droidspaces RootFS Multi-Build
+            Automated Kali Linux RootFS Build
             Built on: ${{ needs.setup.outputs.build_date }}
             Build ID: ${{ needs.setup.outputs.build_id }}
-            
+            systemd 257 old-kernel compat: enabled
+
             Included Templates:
             ${{ join(fromJson(needs.setup.outputs.templates), ', ') }}
           draft: false
