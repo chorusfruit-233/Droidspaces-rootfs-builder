@@ -3,6 +3,8 @@
 ARG TARGETPLATFORM
 FROM kalilinux/kali-rolling AS customizer
 
+ARG ENABLE_systemd257_ARG
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Update base system
@@ -14,8 +16,12 @@ COPY scripts/download-firmware /usr/local/bin/
 # Copy our bashrc script to the rootfs
 COPY scripts/bashrc.sh /etc/profile.d/ds-aliases.sh
 
+# Old-kernel systemd compatibility installer (optional, see ENABLE_systemd257_ARG)
+COPY scripts/systemd257.sh /usr/local/sbin/systemd257
+COPY scripts/patches/0001-droidspaces-old-kernel-compat.patch /usr/local/share/droidspaces/0001-droidspaces-old-kernel-compat.patch
+
 # Make scripts executable
-RUN chmod +x /usr/local/bin/download-firmware /etc/profile.d/ds-aliases.sh
+RUN chmod +x /usr/local/bin/download-firmware /etc/profile.d/ds-aliases.sh /usr/local/sbin/systemd257
 
 # Main installation layer for everything (Minimal + CLI + GUI + Dev tools)
 RUN apt-get update && \
@@ -400,6 +406,17 @@ RUN apt-get purge -y qemu-* binfmt-support || true && \
 # Install custom mesa from lfdevs/mesa-for-android-container
 COPY scripts/install-mesa /usr/local/bin/install-mesa
 RUN chmod +x /usr/local/bin/install-mesa && install-mesa
+
+# Optional: old-kernel systemd compatibility. When enabled, rebuilds the
+# complete systemd 257 package family in-container from Debian trixie source
+# with the old-kernel compat patch, replacing Kali's systemd 258 family.
+RUN if [ "$ENABLE_systemd257_ARG" = "true" ]; then \
+        echo "--> [开启] systemd 257 旧内核兼容: 正在容器内编译并安装 257 包族..." && \
+        bash /usr/local/sbin/systemd257; \
+    else \
+        echo "--> [跳过] 未启用 systemd 257 旧内核兼容"; \
+    fi && \
+    rm -f /usr/local/sbin/systemd257 /usr/local/share/droidspaces/0001-droidspaces-old-kernel-compat.patch
 
 # Final cleanup of APT cache
 RUN apt-get clean && \

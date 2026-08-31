@@ -5,15 +5,22 @@
 # Configuration
 : "${VERSION:=dev}"
 DATE=$(date +%Y%m%d)
+: "${ENABLE_systemd257:=false}"
 
 # Parse arguments
-while getopts "i:v:" opt; do
+while getopts "i:v:S:" opt; do
   case $opt in
     i) DOCKERFILE="$OPTARG" ;;
     v) VERSION="$OPTARG" ;;
-    *) echo "Usage: $0 -i <template.Dockerfile> [-v <version>]" ; exit 1 ;;
+    S) ENABLE_systemd257="$OPTARG" ;; # systemd 257 旧内核兼容 (Kali Linux)
+    *) echo "Usage: $0 -i <template.Dockerfile> [-v <version>] [-S <true|false>]" ; exit 1 ;;
   esac
 done
+
+case "$ENABLE_systemd257" in
+  true|false) ;;
+  *) echo "Error: -S only supports true or false." >&2; exit 1 ;;
+esac
 
 if [ -z "$DOCKERFILE" ]; then
     echo "Error: Template file (-i) is required."
@@ -32,6 +39,7 @@ echo "========================================================="
 echo " Starting Build: $PREFIX"
 echo " Using Template: $DOCKERFILE"
 echo " Build Version : $VERSION"
+echo " systemd 257 Old-Kernel Compat (Kali): $ENABLE_systemd257"
 echo "========================================================="
 
 # 1. Environment Initialization
@@ -61,6 +69,7 @@ docker buildx build \
   --platform linux/arm64 \
   --target export \
   --output type=tar,dest="$TEMP_TAR" \
+  --build-arg ENABLE_systemd257_ARG="$ENABLE_systemd257" \
   -f "$DOCKERFILE" \
   .
 
