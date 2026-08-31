@@ -96,11 +96,11 @@
     "description": "Minimal Kali Linux rootfs with basic packages.",
     "architecture": "aarch64",
     "file": "Kali-Linux-Minimal",
-    "download_url": "https://github.com/Droidspaces/Droidspaces-rootfs-builder/releases/download/v20260830-043300/Kali-Linux-Minimal-Droidspaces-rootfs-aarch64-20260830-v20260830-043300.tar.xz",
-    "sha256": "7306b76e17e13508e493d7d560d2fe78e0b5af48cd54186aa7f636ed6e10b019",
-    "size_bytes": 118840220,
-    "version": "v20260830-043300",
-    "build_date": "20260830",
+    "download_url": "https://github.com/chorusfruit-233/Droidspaces-rootfs-builder/releases/download/v20260831-130315/Kali-Linux-Minimal-Droidspaces-rootfs-aarch64-20260831-v20260831-130315.tar.xz",
+    "sha256": "f7e49c7193cbe5a327cd2554f6d5eb9414785768c80c0b1d50dc385e9041fefa",
+    "size_bytes": 188477064,
+    "version": "v20260831-130315",
+    "build_date": "20260831",
     "author": "Droidspaces developers"
   },
   {
@@ -109,11 +109,11 @@
     "description": "Kali Linux rootfs with basic packages, development tools, Docker, and XFCE desktop environment.",
     "architecture": "aarch64",
     "file": "Kali-Linux-XFCE",
-    "download_url": "https://github.com/Droidspaces/Droidspaces-rootfs-builder/releases/download/v20260830-043300/Kali-Linux-XFCE-Droidspaces-rootfs-aarch64-20260830-v20260830-043300.tar.xz",
-    "sha256": "bbed2e3a3faa789be0db4ba6ea861a4029c0d20a677031899dd0f0a3217335dd",
-    "size_bytes": 814218356,
-    "version": "v20260830-043300",
-    "build_date": "20260830",
+    "download_url": "https://github.com/chorusfruit-233/Droidspaces-rootfs-builder/releases/download/v20260831-130315/Kali-Linux-XFCE-Droidspaces-rootfs-aarch64-20260831-v20260831-130315.tar.xz",
+    "sha256": "842a49f8ce0550624e5f6969f51c4e51f09c38d7915e444a33a0e79e00692317",
+    "size_bytes": 818404428,
+    "version": "v20260831-130315",
+    "build_date": "20260831",
     "author": "Droidspaces developers"
   },
   {
